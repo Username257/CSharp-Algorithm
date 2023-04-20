@@ -110,6 +110,7 @@ namespace _01._List
                 Console.WriteLine(list[i]);
 
             string? findValue = list.Find(x => x.Contains('4'));
+            bool a = str.Contains('4');
             int findIndex = list.FindIndex(x => x.Contains('1'));
         }
     }
