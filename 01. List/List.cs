@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 namespace DataStructure
 {
     //internal 같은 어셈블리(프로젝트)에선 public, 다른 어셈블리에선 private
-    //도움 클래스 등을 만드는데 주로 사용
+    //도움 클래스 등을 만드는데 주로 사용 //
     internal class List<T>
     {
         private const int DefaultCapacity = 10;
