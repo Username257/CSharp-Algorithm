@@ -99,7 +99,7 @@ namespace DataStructure
         }
 
         //없을 수도 있으니까 Nullable
-        public T? Find(Predicate<T> match)
+        public T? Find(Predicate<T> match) //(x => x.Contains('4')가 match에 들어옴
         {
             if (match == null)
                 throw new ArgumentNullException("match");
