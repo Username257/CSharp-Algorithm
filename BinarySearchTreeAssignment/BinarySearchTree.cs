@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -24,7 +25,8 @@ namespace BinarySearchTreeAssignment
                 this.right = right;
             }
 
-            //EraseNode를 위한 프로퍼티들
+            //EraseNode를 위한 프로퍼티들(왜 프로퍼티로 했을까)
+            /*
             public bool IsRootNode { get { return parent == null; } }
             public bool IsLeftChild { get { return parent != null && parent.left == this; } }
             public bool IsRightChild { get { return parent != null && parent.right == this; } }
@@ -33,6 +35,7 @@ namespace BinarySearchTreeAssignment
             public bool HasLeftChild { get { return left != null && right == null; } }
             public bool HasRightChild { get { return left == null && right != null; } }
             public bool HasBothChild { get { return left != null && right != null; } }
+            */
         }
 
         private Node root;
@@ -54,7 +57,7 @@ namespace BinarySearchTreeAssignment
 
             //비교해야할 루트 노드가 계속 바뀔테니까 변수 생성 그리고 지금 루트(첫 번째 비교대상)주기
             Node currentNode = root;
-            
+
             if (root == null)
             {
                 root = newNode;
@@ -119,6 +122,8 @@ namespace BinarySearchTreeAssignment
                 else
                     return currentNode;
             }
+
+            return null;
         }
 
         public bool Remove(T item)
@@ -135,17 +140,105 @@ namespace BinarySearchTreeAssignment
                 return true;
             }
         }
-        public void EraseNode(Node eraseNode)
+        public void EraseNode(Node eraseNode) //얘도 일관성 없다 하네
         {
-            //왼쪽에서 가장 큰 애를 자기 자리에 주는 듯
-            //그러면 자식이 있으면 게속 그 자식의 왼쪽으로 가다가 자식이 없으면 걔를 내 자리로
-            //오른쪽 자식만 있는 경우엔 그냥 땡겨오면 됨(근데 어떻게?)
-            Node currentNode = eraseNode; //현재 위치의 노드
-            if (currentNode.left != null)
-                currentNode = currentNode.left;
-            else
-                currentNode = currentNode.right;
+            
+            //1. eraseNode가 왼쪽 자식이다 == 부모 노드와 왼쪽 자식 관계를 끊는다
+            //2. 오른쪽 자식이다 == 부모 노드와 오른쪽 자식 관계를 끊는다
+            //3. root다 == 자기 자신을 지운다(root 하나만 있는 상태다)
+
+            bool IsLeftChild = (eraseNode.parent != null && eraseNode.parent.left == eraseNode) ? true : false;
+            bool IsRightChild = (eraseNode.parent != null && eraseNode.parent.right == eraseNode) ? true : false;
+            
+
+            //는 자식 노드가 없는 경우고
+            if (eraseNode.right == null && eraseNode.left == null)
+            {
+                if (IsLeftChild)
+                    eraseNode.parent.left = null;
+                else if (IsRightChild)
+                    eraseNode.parent.right = null;
+                else
+                    eraseNode = null;
+            }
+
+            //자식 노드가 있는 경우..
+            //왼쪽에서 가장 큰 애를 자기 자리에 주는 듯 <- 그냥 자기 왼쪽 자식을 자신으로 대체한다는 말이 되는 듯
+            //오른쪽 자식만 있는 경우엔 그냥 땡겨오면 됨(근데 어떻게? -> 그냥 연결해주면 됨)
+
+            bool HasLeftChild = (eraseNode.left != null && eraseNode.right == null) ? true : false;
+            bool HasRightChild = (eraseNode.left == null && eraseNode.right != null) ? true : false;
+            bool HasBothchild = (eraseNode.left != null && eraseNode.right != null) ? true : false;
+            
+            if (eraseNode.right != null && eraseNode.left == null)
+            {
+                eraseNode.parent.right = eraseNode.right;
+                eraseNode.right.parent = eraseNode.parent;
+            } 
+            
+            if(eraseNode.right == null && eraseNode.left != null)
+            {
+                eraseNode.parent.left = eraseNode.left;
+                eraseNode.left.parent = eraseNode.parent;
+            }
+
+            if (eraseNode.right != null && eraseNode.left != null)
+            {
+                Node replaceNode = eraseNode.left;
+                while (replaceNode.right != null)
+                {
+                    replaceNode = replaceNode.right; //제일 큰 값을 계속 준다
+                }
+                eraseNode.item = replaceNode.item; //제일 큰 값을 받아온다
+                EraseNode(replaceNode); //를 재귀함수로 반복
+            }
         }
 
+
+        public bool TryGetValue(T item, out T outValue)
+        {
+            /*
+              루트가 없다면 == false리턴, outValue에 디폴트
+              최근 노드에 루트 주고
+              반복문 {
+              찾으려는 아이템이 최근 노드의 값보다 작으면 왼쪽 자식을 최근 노드에 줌
+              크면 오른쪽 자식을 주고
+              같으면 그 outValue에 그 값 주고 true }
+              반복문을 나왔다(무슨 경우지?) == false, 디폴트
+            */
+            //아이템을 찾으면 true, 못 찾으면 false고
+            //out 이랑 outValue는 뭐지?
+            //out 키워드를 사용하면 변수가 참조로 전달 됨
+            //out 키워드를 사용한 매개변수는 함수 내부에서 무조건 값을 세팅해줘야함
+            //ref는 사용하기 전에 초기화, out은 초기화 필요 없음
+
+            //함수를 쓸 때 (찾을 아이템, 함수 내에서 준 outValue받을 변수) 로 매개변수 주는 거 같고
+            //그니까.. 그냥 맨 값을 입력하면 실제 트리 안에 있는 노드의 값을 준다는 듯?
+
+            if (root == null)
+            {
+                outValue = default(T);
+                return false;
+            }
+            else
+            {
+                Node currentNode = root;
+                while(currentNode != null)
+                {
+                    if (item.CompareTo(currentNode.item) < 0) //왜 T에는 CompareTo 해야하는 지 <- 인터페이스가 비교연산자 지원 안 해준다는 듯, null일 수도 있으니
+                        currentNode = currentNode.left;
+                    else if (item.CompareTo(currentNode.item) > 0)
+                        currentNode = currentNode.right;
+                    else
+                    {
+                        outValue = currentNode.item;
+                        return true;
+                    }
+                }
+                outValue = default(T);
+                return false;
+            }
+        }
     }
 }
+
